@@ -9,9 +9,6 @@ Beaver takes a PDF syllabus, extracts its text, uses OpenAI to identify academic
 
 The application is built around a server-side Next.js architecture, with PDF processing, AI extraction, authentication, event normalization, recurrence handling, and Google Calendar synchronization handled through API routes.
 
-
-> Documentation is a WIP.
-
 ## Stack
 
 - **Next.js** — application framework and server-side API routes
@@ -328,11 +325,5 @@ GOOGLE_REDIRECT_URI=
 npm install
 npm run dev
 ```
-
-The application can then be run locally through the Next.js development server.
-
-```
-```
----
 
 Jeevan Sanchez, 2026
