@@ -8,8 +8,7 @@ import {
 import * as motion from "framer-motion/client"; 
 import LoginButton from "./components/custom/LoginButton";
 import LogoutButton from "./components/custom/LogoutButton";
-import UploadButton from "./components/custom/UploadButton";
-import { Upload } from "lucide-react";
+import DashboardContainer from "./components/custom/DashboardContainer";
 
 export default async function Home() {
   const session = await auth();
@@ -110,7 +109,7 @@ export default async function Home() {
                 ease: [0.16, 1, 0.3, 1],
               }}
             >
-              <UploadButton />
+              <DashboardContainer />
             </motion.div>
             <div className="absolute bottom-10 right-20 flex font-manrope">
               <LogoutButton />
