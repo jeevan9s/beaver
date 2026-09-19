@@ -17,6 +17,31 @@ interface RawEvent {
   name?: string;
   date?: string;
   summary?: string;
+  recurrence?: {
+    freq?: string;
+    byDay?: string[];
+    interval?: number;
+    until?: string | null;
+  } | null;
+}
+
+const VALID_DAYS = new Set(["MO", "TU", "WE", "TH", "FR", "SA", "SU"]);
+
+function sanitizeRecurrence(raw: RawEvent["recurrence"]): syllabus.Recurrence | null {
+  if (!raw || raw.freq !== "WEEKLY") return null;
+
+  const byDay = (raw.byDay ?? []).filter(
+    (day): day is string => typeof day === "string" && VALID_DAYS.has(day.toUpperCase()),
+  ).map((day) => day.toUpperCase());
+
+  if (byDay.length === 0) return null;
+
+  return {
+    freq: "WEEKLY",
+    byDay,
+    interval: typeof raw.interval === "number" && raw.interval > 0 ? raw.interval : 1,
+    until: raw.until ?? null,
+  };
 }
 
 export async function POST(req: Request): Promise<NextResponse<syllabus.Response>> {
@@ -100,10 +125,14 @@ async function extractEvents(syllabusText: string): Promise<syllabus.Event[]> {
   const parsed = JSON.parse(completion.choices[0].message.content || "{}"); 
   const rawEvents: RawEvent[] = parsed.events || []; 
 
-  return rawEvents.map((e, index) => ({
-    id: e.id || `event-${index}`,
-    name: e.name || "untitled event", 
-    date: e.date ?? new Date().toISOString().split("T")[0], 
-    summary: e.summary ?? undefined,
-  }));
+  return rawEvents
+    .map((e, index) => ({
+      id: e.id || `event-${index}`,
+      name: e.name || "untitled event",
+      date: e.date ?? null,
+      summary: e.summary ?? undefined,
+      recurrence: sanitizeRecurrence(e.recurrence),
+    }))
+    // no explicit (or derivable, for recurring) date - drop rather than invent one
+    .filter((e) => e.date !== null || e.recurrence !== null);
 }
