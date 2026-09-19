@@ -2,8 +2,13 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import { Button } from "../ui/button";
+import * as syllabus from "@/app/types/syllabus";
 
-export default function UploadButton() {
+interface UploadButtonProps {
+  onExtracted?: (data: syllabus.Response) => void;
+}
+
+export default function UploadButton({ onExtracted }: UploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
 
@@ -11,21 +16,32 @@ export default function UploadButton() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setStatusText(`uploaded ${file.name}`);
+    setStatusText(`parsing ${file.name}...`);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      const response = await fetch("/api/parse-syllabus", {
+      const response = await fetch("/api/extract", {
         method: "POST",
         body: formData,
       });
 
-      const data = await response.json();
-      console.log(data);
+      if (!response.ok) {
+        throw new Error("Failed to extract syllabus");
+      }
+
+      const data: syllabus.Response = await response.json();
+      
+      if (data.success) {
+        setStatusText(`Successfully extracted ${data.events.length} events!`);
+        onExtracted?.(data); 
+      } else {
+        setStatusText("Failed to process syllabus.");
+      }
     } catch (error) {
       console.error(error);
+      setStatusText("Error processing file.");
     }
   };
 
