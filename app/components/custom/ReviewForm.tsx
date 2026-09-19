@@ -97,7 +97,13 @@ export default function ReviewForm({
   const [isSyncing, setIsSyncing] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [showUndo, setShowUndo] = useState(false);
-  const previousEventsRef = useRef<syllabus.Event[]>(initialEvents);
+  
+  // Track the events that were actually sent to the calendar during the last successful sync
+  const [syncedEvents, setSyncedEvents] = useState<syllabus.Event[] | null>(null);
+
+  const previousEventsRef = useRef<syllabus.Event[]>(
+    initialEvents.map((event) => ({ ...event }))
+  );
 
   const count = events.length;
   const plural = count === 1 ? "" : "s";
@@ -115,16 +121,39 @@ export default function ReviewForm({
     setEditingId((current) => (current === id ? null : current));
   };
 
-  const handleUndo = () => {
-    setEvents(previousEventsRef.current);
-    setStatus("changes reverted.");
-    setShowUndo(false);
+  const handleUndo = async () => {
+    if (!syncedEvents) return;
+
+    setIsSyncing(true);
+    setStatus("removing events from calendar...");
+
+    try {
+      const response = await fetch("/api/revert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ events: syncedEvents }),
+      });
+
+      if (!response.ok) {
+        setStatus("couldn't remove events from calendar. try again.");
+        return;
+      }
+
+      setEvents(previousEventsRef.current.map((event) => ({ ...event })));
+      setStatus("changes reverted and events removed from calendar.");
+      setShowUndo(false);
+      setSyncedEvents(null);
+    } catch (error) {
+      console.error(error);
+      setStatus("couldn't undo right now. try again in a moment.");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleSync = async () => {
     if (count === 0 || hasBlankName) return;
 
-    previousEventsRef.current = [...events];
     setEditingId(null);
     setIsSyncing(true);
     setStatus("syncing to google calendar...");
@@ -150,6 +179,8 @@ export default function ReviewForm({
         return;
       }
 
+      // Save a copy of the events that were successfully sent
+      setSyncedEvents(events.map((event) => ({ ...event })));
       setStatus(`Beaver synced ${count} event${plural} to your calendar.`);
       setShowUndo(true);
     } catch (error) {
@@ -333,8 +364,9 @@ export default function ReviewForm({
           <motion.button
             type="button"
             onClick={handleUndo}
-            {...grow()}
-            className="cursor-pointer text-black underline underline-offset-4 transition-colors hover:text-neutral-600 focus-visible:outline-none"
+            disabled={isSyncing}
+            {...grow(isSyncing)}
+            className="cursor-pointer text-black underline underline-offset-4 transition-colors hover:text-neutral-600 focus-visible:outline-none disabled:opacity-50"
           >
             undo
           </motion.button>

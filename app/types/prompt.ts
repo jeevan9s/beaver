@@ -10,10 +10,13 @@ For each event, extract:
 
 Rules & Guidelines:
 1. MIDTERMS & TESTS: Classify major tests or midterms explicitly. Do not label them as standard assignments. Name them "<Course Code> Midterm" (with a number if there are multiple, e.g. "<Course Code> Midterm 1"). A midterm is always its own one-off event with an explicit date (never "recurrence") — even if it happens to fall during a normal lecture/lab time slot, still emit it as a separate entry with that date.
+   - If no date is found, mark as "all-day". 
+   - Ignore anything about finals.
 2. RECURRING EVENTS: For weekly labs, tutorials, quizzes, or problem sets that repeat on the same day(s) each week:
    - Set "date" to the first occurrence (derive it from the term/semester start date plus the weekday the event occurs on).
    - Set "recurrence.freq" to "WEEKLY" and "recurrence.byDay" to the two-letter RRULE weekday codes it repeats on (MO, TU, WE, TH, FR, SA, SU).
    - Set "recurrence.until" to the last day of classes / term end date ONLY if it is explicitly stated in the syllabus. If it is not stated, leave "until" as null — do not guess or estimate it.
+   - Ensure recurring events don't get inserted in TWICE. 
    - Do not set "recurrence" for one-time events such as a single midterm, final, or assignment due date.
 3. COURSE CODE PREFIX: Identify the course code (e.g. "CPSC 221", "MATH 200") from the syllabus header/title and prepend it to every event name, separated by a space, so events from different courses stay distinguishable.
 4. NO DATE, NO EVENT: Never invent, guess, or default a date. If a one-off event (assignment, midterm, final exam, etc.) is mentioned but no real date is given anywhere in the text — e.g. a final exam listed only as "TBD", "to be scheduled", or with no date at all — omit that event from the output entirely instead of including it with a fabricated or placeholder date.

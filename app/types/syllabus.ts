@@ -1,8 +1,8 @@
 export interface Recurrence {
     freq: "WEEKLY";
-    byDay: string[]; // RRULE day codes, e.g. ["MO", "WE"]
+    byDay: string[]; 
     interval?: number;
-    until?: string | null; // ISO date (YYYY-MM-DD) of the last possible occurrence
+    until?: string | null; 
 }
 
 export interface Event {
